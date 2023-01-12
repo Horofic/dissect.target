@@ -1,18 +1,16 @@
 import re
+from datetime import datetime, timezone
 from functools import lru_cache
+from pathlib import Path
 from typing import Generator, List, Tuple
 
-from pathlib import Path
-from datetime import datetime, timezone
 from defusedxml import ElementTree
-
 from flow.record.base import RE_VALID_FIELD_NAME
 
 from dissect.target import plugin
+from dissect.target.exceptions import UnsupportedPluginError
 from dissect.target.helpers import fsutil
 from dissect.target.helpers.record import TargetRecordDescriptor
-from dissect.target.exceptions import UnsupportedPluginError
-
 
 LOG_RECORD_NAME = "filesystem/windows/iis/logs"
 
@@ -269,6 +267,9 @@ class IISLogsPlugin(plugin.Plugin):
             self.target.log.info("Parsing IIS log file %s in %s format", log_file, log_format)
             yield from parse_func(log_file)
 
+    @plugin.export(record=BasicRecordDescriptor)
+    def history(self) -> Generator[TargetRecordDescriptor, None, None]:
+        return self.logs()
 
 def replace_dash_with_none(data: dict) -> dict:
     """Replace "-" placeholder in dict values with None"""
